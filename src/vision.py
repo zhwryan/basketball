@@ -250,7 +250,7 @@ def llm_descrip(
 
 
 if __name__ == "__main__":
-    path = 'assets/宏伟-004.mp4'
+    path = '.res/宏伟-004.mp4'
 
     # 处理视频生成事件序列
     ti = time()

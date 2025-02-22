@@ -126,8 +126,7 @@ def process_video(path, interval=0.5):
 
 
 if __name__ == "__main__":
-    path = 'assets/宏伟-004.mp4'
-    # path = "比赛/250124/白队-001.mp4"
+    path = '.res/宏伟-004.mp4'
     ti = time()
     rets = process_video(path)
     # ret = llm_analysis(rets)

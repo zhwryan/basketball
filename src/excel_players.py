@@ -51,5 +51,5 @@ def generate_excel(path):
 
 
 if __name__ == '__main__':
-    generate_players('assets/球员名单.xlsx')
-    generate_excel('球员能力.xlsx')
+    generate_players('.res/球员名单.xlsx')
+    generate_excel('output/球员能力.xlsx')

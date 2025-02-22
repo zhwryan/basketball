@@ -288,7 +288,7 @@ def formal_excel(src_path):
 
 
 if __name__ == '__main__':
-    src_path = 'assets/数据统计.xlsx'
+    src_path = '.res/数据统计.xlsx'
     out_path = "output/赛季数据.xlsx"
     generate_match_db(src_path)
     generate_season_db()
