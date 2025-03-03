@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 from datetime import datetime
 
@@ -9,6 +10,14 @@ def parse_match_time(sheet_name):
         return None
     match_name = match.group()
     return datetime.strptime(match_name, '%y.%m.%d').strftime('%Y.%m.%d')
+
+
+# 计算百回合得分
+def calc_bh(u):
+    poss = u['投篮出手'] + 0.44 * u['罚球出手'] + u['失误']
+    if poss > 0:
+        return round(100 * u['得分'] / poss, 1)
+    return 0
 
 
 # 计算效率值
@@ -59,7 +68,7 @@ def calc_dws(user):
     return user['后场板'] + user['抢断'] + user['盖帽'] * 0.8
 
 
-# 计算总胜利贡献值（WS）
+# 计算胜利贡献值（WS）
 def calc_ws(user, total_ows, total_dws):
     ows = (calc_ows(user)) / total_ows
     dws = calc_dws(user) / total_dws

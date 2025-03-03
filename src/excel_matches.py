@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+from __init__ import *
 
+import openpyxl
 import pandas as pd
 from pymongo import MongoClient
 from src.tools import *
-import openpyxl
-import pandas as pd
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
@@ -15,12 +15,13 @@ match_titles = [
 ]
 score_titles = ['胜场', '败场', '积分', '胜率', '连胜', '连败']
 avg_titles = [
-    '得分', '篮板', '前场板', '后场板', '助攻', '盖帽', '抢断', '失误', '效率值', '投篮命中', '投篮出手',
-    '投篮命中率', '3分命中', '3分出手', '3分命中率', '罚球命中', '罚球出手', '罚球命中率', '有效命中率', '真实命中率'
+    '得分', '篮板', '助攻', '盖帽', '抢断', '失误', '效率值', '攻防贡献率', '百回合得分', '投篮命中率',
+    '3分命中率', '罚球命中率', '有效命中率', '真实命中率', '前场板', '后场板', '投篮命中', '投篮出手', '3分命中',
+    '3分出手', '罚球命中', '罚球出手'
 ]
 season_titles = [
     '得分', '篮板', '助攻', '盖帽', '抢断', '失误', '前场板', '后场板', '投篮命中', '投篮出手', '3分命中',
-    '3分出手', '罚球命中', '罚球出手'
+    '3分出手', '罚球命中', '罚球出手', "攻防贡献率"
 ]
 client = MongoClient('mongodb://basketball:basketball@localhost:37017/')
 match_db = client['比赛']
@@ -50,19 +51,7 @@ def generate_match_db(src_path):
                     u[title + '命中'] = int(record[title].split('-')[0])
                     u[title + '出手'] = int(record[title].split('-')[1])
 
-            # 计算进攻回合数
-            possessions = (
-                u['投篮出手'] + u['3分出手']  # 投篮出手数
-                + u['失误']  # 失误数
-                + 0.44 * u['罚球出手']  # 罚球系数
-                - u['前场板'])  # 减去进攻篮板
-
-            # 百回合得分
-            if possessions > 0:
-                u['百回合得分'] = round(u['得分'] / possessions * 100, 1)
-            else:
-                u['百回合得分'] = 0
-
+            u['百回合得分'] = calc_bh(u)
             u['效率值'] = calc_per(u, 1)
             u['比赛时间'] = match_time
             users.append(u)
@@ -115,6 +104,7 @@ def generate_avg_db():
             '3分命中率': calc_fg(season, "3分"),
             '罚球命中率': calc_fg(season, "罚球"),
             '效率值': calc_per(season, times),
+            '百回合得分': calc_bh(season),
         }
         for title in avg_titles:
             if title in season:
@@ -288,7 +278,7 @@ def formal_excel(src_path):
 
 
 if __name__ == '__main__':
-    src_path = '.res/数据统计.xlsx'
+    src_path = 'userdata/数据统计.xlsx'
     out_path = "output/赛季数据.xlsx"
     generate_match_db(src_path)
     generate_season_db()
