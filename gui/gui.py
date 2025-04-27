@@ -5,8 +5,8 @@ import os
 import sys
 from datetime import datetime
 from PyQt6.QtWidgets import *
-from PyQt6.QtCore import Qt, QSettings
-from src.excel_matches import *
+from PyQt6.QtCore import QSettings
+from src.matches_stats import *
 
 
 class MainWindow(QMainWindow):
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         # 创建文件路径选择区域
         file_layout = QHBoxLayout()
         self.file_path = QLineEdit()
-        self.file_path.setText('userdata/数据统计.xlsx')
+        self.file_path.setText('assets/起势内战数据统计.xlsx')
         self.open_file_btn = QPushButton('输入数据')
         file_layout.addWidget(self.file_path)
         file_layout.addWidget(self.open_file_btn)
@@ -122,7 +122,8 @@ class MainWindow(QMainWindow):
             self.log_text.append(f'数据处理完成！输出文件：{output_path}')
 
         except Exception as e:
-            self.log_text.append(f'错误：{str(e)}')
+            import traceback
+            self.log_text.append(f'错误：{str(e)}\n{traceback.format_exc()}')
             self.progress_bar.setValue(0)
 
     def open_file(self):
@@ -144,12 +145,8 @@ class MainWindow(QMainWindow):
             self.log_text.append(f'已选择输出目录: {dir_name}')
 
 
-def main():
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    main()

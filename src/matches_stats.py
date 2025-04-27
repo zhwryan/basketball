@@ -4,7 +4,7 @@ from __init__ import *
 import openpyxl
 import pandas as pd
 from pymongo import MongoClient
-from src.tools import *
+from src.utils.tools import *
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
@@ -278,8 +278,9 @@ def formal_excel(src_path):
 
 
 if __name__ == '__main__':
-    src_path = 'userdata/数据统计.xlsx'
-    out_path = "output/赛季数据.xlsx"
+    src_path = 'assets/起势内战数据统计.xlsx'
+    current_date = datetime.now().strftime('%Y%m%d')
+    out_path = f"output/赛季数据_{current_date}.xlsx"
     generate_match_db(src_path)
     generate_season_db()
     generate_avg_db()

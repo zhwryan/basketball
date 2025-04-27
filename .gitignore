@@ -2,3 +2,4 @@
 output
 userdata
 *.pyc
+config.json
