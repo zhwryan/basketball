@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from numpy import append
+
 from __init__ import *
 import json
+from ntpath import isfile
 from openpyxl import load_workbook
 from pymongo import MongoClient
 from src.utils.open_api import OpenApi
 from src.utils.utils import Utils
-import os
 
 client = MongoClient('mongodb://basketball:basketball@localhost:37017/')
 player_db = client['球员']
@@ -37,20 +37,6 @@ _SYSTEM = """
 """
 
 
-def query_player_info(name: str) -> str:
-    avg = season_db['场均数据'].find_one({"姓名": name})
-    player = player_db['名单'].find_one({"姓名": name})
-    if not avg or not player:
-        return
-
-    avg["位置"] = player["位置"]
-    avg["身高"] = player["身高"]
-    avg["体重"] = player["体重"]
-    avg.pop("场次")
-    name = avg.pop("_id")
-    return f"{name}={json.dumps(avg, ensure_ascii=False)}"
-
-
 def query_team_stats(match_name):
     """
     从Excel文件中查询球队统计数据
@@ -77,10 +63,25 @@ def query_players_stats(match_name):
     """
     result = []
     for match_data in match_db[match_name].find():
-        match_data.pop('_id', None)
-        match_data.pop('投票', None)
-        user = json.dumps(match_data, ensure_ascii=False)
-        result.append(user)
+        match_data.pop('投票')
+        name = match_data.pop("_id")
+        avg_data = season_db['场均数据'].find_one({"姓名": name})
+        if avg_data:
+            avg_data.pop('_id')
+            avg_data.pop('场次')
+        pos_data = player_db['名单'].find_one({"姓名": name})
+        if pos_data:
+            pos_data.pop('_id')
+        result.append(f"""
+## {name}球员数据
+```json
+// 本场比赛数据
+{json.dumps(match_data, ensure_ascii=False)}
+// 历史场均数据
+{json.dumps(avg_data or {}, ensure_ascii=False)}
+// 球员个人信息
+{json.dumps(pos_data or {}, ensure_ascii=False)}
+```""")
 
     return "\n".join(result)
 
@@ -88,43 +89,55 @@ def query_players_stats(match_name):
 def query_match_event(match_name):
     result = []
     src_dir = f"userdata/{match_name}"
-    files = os.listdir(src_dir)
-    for file in files:
-        with open(op.join(src_dir, file), 'r', encoding='utf-8') as f:
+    for file in os.listdir(src_dir):
+        path = op.join(src_dir, file)
+        if not isfile(path):
+            continue
+        with open(path, 'r', encoding='utf-8') as f:
             result.append(f.read())
     return "\n".join(result)
 
 
 def gen_prompt(match_name, scores):
-    prompt = f"""
+    return f"""
 # 球队数据
 ```json
 {query_team_stats(match_name)}
 ```
+
 # 四节比分
-```{scores}```
-# 球员数据
-```json
-{query_players_stats(match_name)}
 ```
+{scores}
+```
+
+# 球员数据
+{query_players_stats(match_name)}
+
 # 比赛过程
 ```
 {query_match_event(match_name)}
 ```
 """
-    print(prompt)
-    return prompt
+
+
+def main(match_name, scores, use_llm=True):
+    prompt = gen_prompt(match_name, scores)
+
+    if use_llm:
+        api = OpenApi("deepseek")
+        api.system = _SYSTEM
+        report = api.generate(prompt, temperature=0.0)
+        Utils.write_file('output/比赛报告.md', report)
+    else:
+        print(prompt)
 
 
 # 示例用法
 if __name__ == '__main__':
-    prompt = gen_prompt(
-        "25.4.25白胜", """
-一 二 三 四 总分
-白队 19 40 32 29 120
-紫队 30 31 19 37 117
-""")
-    # api = OpenApi("deepseek")
-    # api.system = _SYSTEM
-    # llm_report = api.generate(prompt, temperature=0.0)
-    # Utils.write_file('output/比赛报告.md', llm_report)
+    scores = "白队 19 40 32 29\n紫队 30 31 19 37"
+    match_name = "25.4.25白胜"
+    main(
+        match_name,
+        scores,
+        # False,
+    )
