@@ -4,25 +4,6 @@ from __init__ import *
 import pandas as pd
 from collections import defaultdict
 
-STATS = {
-    '得分': 0,
-    '投篮命中': 0,
-    '投篮出手': 0,
-    '三分命中': 0,
-    '三分出手': 0,
-    '罚球命中': 0,
-    '罚球出手': 0,
-    '篮板': 0,
-    '进攻篮板': 0,
-    '防守篮板': 0,
-    '助攻': 0,
-    '抢断': 0,
-    '盖帽': 0,
-    '失误': 0,
-    '球队': "",
-    '胜负': "",
-}
-
 
 def ev_2p_hit(stats, player):
     stats[player]['投篮出手'] += 1
@@ -99,8 +80,11 @@ EVENTS = {
 }
 
 
-def parse_match_events(stats, file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+def parse_match_events(stats, path):
+    if not path.lower().endswith(('.md', '.txt')):
+        return
+
+    with open(path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             catched = False
@@ -143,13 +127,30 @@ def save_stats(stats, match_name):
     print(f"统计数据已保存: {out_path}")
 
 
-def parse_matchs_events(src_dir, match_name):
+def parse_matchs_events(match_name):
     src_dir = f"userdata/{match_name}"
-    stats = defaultdict(lambda: STATS.copy())
-    for root, _, files in os.walk(src_dir):
-        for file in files:
-            path = op.join(root, file)
-            parse_match_events(stats, path)
+    stats = defaultdict(
+        lambda: {
+            '得分': 0,
+            '投篮命中': 0,
+            '投篮出手': 0,
+            '三分命中': 0,
+            '三分出手': 0,
+            '罚球命中': 0,
+            '罚球出手': 0,
+            '篮板': 0,
+            '进攻篮板': 0,
+            '防守篮板': 0,
+            '助攻': 0,
+            '抢断': 0,
+            '盖帽': 0,
+            '失误': 0,
+            '球队': "",
+            '胜负': "",
+        })
+    for file in os.listdir(src_dir):
+        path = op.join(src_dir, file)
+        parse_match_events(stats, path)
     save_stats(stats, match_name)
 
 
