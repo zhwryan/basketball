@@ -5,9 +5,11 @@ import cv2
 from pathlib import Path
 from cnocr import CnOcr
 
+BACK_TIME = 8
+LAST_TIME = 6
 ocr = CnOcr(
     rec_model_name="number-densenet_lite_136-fc",
-    threshold=0.35,
+    threshold=0.4,
 )
 
 
@@ -15,14 +17,14 @@ def ocr_file(frame, path, save=False):
     pre_ext = op.splitext(op.basename(path))[0]
     ret = []
 
-    def _ocr(w1, w2, h1, h2):
+    def ocr_rect(w1, w2, h1, h2):
         text = ocr.ocr_for_single_line(frame[w1:w2, h1:h2])['text']
         if save:
             cv2.imwrite(f"output/test_{pre_ext}_{text}.jpg", f)
         ret.append(text)
 
-    _ocr(931, 1000, 779, 893)
-    _ocr(931, 1000, 1191, 1305)
+    ocr_rect(931, 1000, 779, 893)
+    ocr_rect(931, 1000, 1191, 1305)
 
     if len(ret) == 2:
         return "_".join(ret)
@@ -86,8 +88,8 @@ def ocr_video(path, out_dir, rate=1):
             pre_score = score
         elif score != pre_score:
             out_path = op.join(out_dir, f"{pre_score}_{score}") + ext
-            start = max(0, ft - 7 * fps)
-            end = min(ft + fps, fc)
+            start = max(0, ft - BACK_TIME * fps)
+            end = min(start + LAST_TIME * fps, fc)
             save_vedio(path, out_path, start, end)
             break
     cap.release()
@@ -107,5 +109,8 @@ def generate(out_dir, *args):
 
 
 if __name__ == "__main__":
-    out_dir = "output/25.4.25白胜"
-    generate(out_dir, "userdata/4.25白队", "userdata/4.25紫队")
+    dir = "25.4.12志超"
+    generate(f"output/{dir}", f"userdata/{dir}")
+
+    dir = "25.4.19老蔡"
+    generate(f"output/{dir}", f"userdata/{dir}")
