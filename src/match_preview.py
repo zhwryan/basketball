@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import json
 from __init__ import *
+import json
 from pymongo import MongoClient
 from typing import List
+from src.match_names import MatchNames
 from src.utils.open_api import OpenApi
 from src.utils.utils import Utils
 
+mongo_c = MongoClient('mongodb://basketball:basketball@localhost:37017/')
 _SYSTEM = """
 - Role: 资深篮球分析师
 - Background: 用户要一份激情四溢的专业赛前分析报告,用于深入了解即将进行的篮球比赛的各个方面,包括球队优势、关键对位、比赛走势预测以及战术建议。
@@ -17,9 +19,10 @@ _SYSTEM = """
 - Workflow:
   1. 深入分析双方球队的球员数据,总结出双方球队的优势。
   2. 根据球队阵容和球员特点,确定关键对位,并分析这些对位可能对比赛胜负产生的影响。
-  3. 根据5个不同的位置,列出5组对位球员的优势,并给出分析报告。
+  3. 根据7个相同或接近球员的位置,列出对位球员的优劣势,不要区分主力替补,并给出分析报告。
   4. 结合球队优势和关键对位,预测比赛可能的走势和结果。预测双方胜率.
   5. 根据分析结果,给出针对性的战术建议,帮助球队在比赛中发挥优势。
+  6. 检查分析报告中的数据,是否有误,校对数据的准确性和一致性。
 - example:
 ```
 # 白队 vs 紫队 赛前分析报告
@@ -34,11 +37,13 @@ _SYSTEM = """
 
 ## 关键对位分析
 
-### 1. 中锋对位：
-### 2. 大前锋对位：
-### 3. 小前锋对位：
-### 4. 得分后卫对位
-### 5. 控球后卫对位
+### 1. 对位1
+### 2. 对位2
+### 3. 对位3
+### 4. 对位4
+### 5. 对位5
+### 6. 对位6
+### 7. 对位7
 
 ## 比赛走势预测
 1. **开局阶段**
@@ -68,9 +73,8 @@ _SYSTEM = """
 
 
 def query_team(players: List[str]) -> str:
-    client = MongoClient('mongodb://basketball:basketball@localhost:37017/')
-    player_db = client['球员']
-    season_db = client['赛季']
+    player_db = mongo_c['球员']
+    season_db = mongo_c['赛季']
 
     result = []
     for name in players:
@@ -110,7 +114,10 @@ def generate(team_white, team_purple):
 
 # 示例用法
 if __name__ == '__main__':
-    team_white = ["郑宏伟", '魏晓均', '连淼', '施𬱖', '陈泓达', '吴维']
-    team_purple = ['刘竞', "刘书浚", "国宇", '陈超', '陈超朋友']
+    src = """
+白队：林鸿、宏伟、志超、泓达、晓均、陈超、郑超、吴维
+紫队：刘竞、国宇、阿鑫、施𬱖、连淼、志坚、益民、宋延
+"""
+    team_white, team_purple = MatchNames().checkout(src)
     llm_report = generate(team_white, team_purple)
     Utils.write_file('output/赛前预测.md', llm_report)
