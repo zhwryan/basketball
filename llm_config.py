@@ -131,7 +131,7 @@ LLM_CONFIGS["groq"] = {
     ]
 }
 
-LLM_CONFIGS["deepseek"] = {
+LLM_CONFIGS["深度求索"] = {
     "base_url": "https://api.deepseek.com",
     "api_key": os.getenv("DEEPSEEK_ACCESS_KEY"),
     "models": [
